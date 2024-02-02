@@ -3,7 +3,7 @@ const fs = require("fs");
 
 let result = [];
 try {
-  let data = fs.readFileSync("./All.csv", "utf8");
+  let data = fs.readFileSync("./All_02_02_2024.csv", "utf8");
   data = data.replaceAll('"', "");
   const lines = data.split("\n");
   const header = lines[0].split(",");
@@ -37,6 +37,8 @@ result = result
     Score: r["EverythingAllAtOnce"],
     OverBought: 100 - r["Overbought_100"],
     Change_6m: r["change_6m"],
+    OneYearReturn: r["1Y Return"],
+    FiveYearCagr: r["5Y CAGR"],
   }));
 
 let sumClosePrice = 0;
