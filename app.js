@@ -3,7 +3,7 @@ const fs = require("fs");
 
 let result = [];
 try {
-  let data = fs.readFileSync("./All_02_02_2024.csv", "utf8");
+  let data = fs.readFileSync("./All_21_06_2024.csv", "utf8");
   data = data.replaceAll('"', "");
   const lines = data.split("\n");
   const header = lines[0].split(",");
@@ -32,6 +32,7 @@ result = result
     // Change_6m: r["change_6m"],
     OneYearReturn: r["1Y Return"],
     FiveYearCagr: r["5Y CAGR"],
+    OneYearRevGrowth: r["1Y Historical Revenue Growth"],
   }))
   .filter(
     (r) =>
@@ -41,10 +42,11 @@ result = result
       // typeof r["Overbought_100"] === "number" &&
       typeof r.OneYearReturn === "number" &&
       typeof r.FiveYearCagr === "number" &&
+      typeof r.OneYearRevGrowth === "number" &&
       r.Sub_Sector !== undefined,
   );
 
-console.log({ result });
+// console.log({ result });
 console.log({ result: result.length });
 
 const sectorGrouped = result.reduce((acc, curr) => {
@@ -54,12 +56,18 @@ const sectorGrouped = result.reduce((acc, curr) => {
       marketCap: 0,
       sumOneYearReturn: 0,
       sumFiveYearCagr: 0,
+      sumOneYearRevGrowth: 0,
     };
   }
-  acc[curr.Sub_Sector].count++;
-  acc[curr.Sub_Sector].marketCap += curr.Market_Cap;
-  acc[curr.Sub_Sector].sumOneYearReturn += curr.OneYearReturn;
-  acc[curr.Sub_Sector].sumFiveYearCagr += curr.FiveYearCagr;
+  if (curr.OneYearReturn < 1000) {
+    acc[curr.Sub_Sector].count++;
+    acc[curr.Sub_Sector].marketCap += curr.Market_Cap;
+    acc[curr.Sub_Sector].sumOneYearReturn += curr.OneYearReturn;
+    acc[curr.Sub_Sector].sumFiveYearCagr += curr.FiveYearCagr;
+    acc[curr.Sub_Sector].sumOneYearRevGrowth += curr.OneYearRevGrowth;
+  } else {
+    console.log(curr);
+  }
   return acc;
 }, {});
 
@@ -73,18 +81,26 @@ const sectoredGroupArray = Object.keys(sectorGrouped)
       sectorGrouped[key].sumOneYearReturn / sectorGrouped[key].count,
     avgFiveYearCagr:
       sectorGrouped[key].sumFiveYearCagr / sectorGrouped[key].count,
+    avgOneYearRevGrowth:
+      sectorGrouped[key].sumOneYearRevGrowth / sectorGrouped[key].count,
   }))
   .sort((a, b) => b.avgOneYearReturn - a.avgOneYearReturn);
 
 sectoredGroupArray.map((s) => {
   console.log(
     s.Sub_Sector,
-    s.avgMarketCap,
+    roundto100(s.avgMarketCap),
     s.count,
-    s.avgOneYearReturn,
-    s.avgFiveYearCagr,
+    roundto100(s.avgOneYearReturn),
+    roundto100(s.avgOneYearRevGrowth),
+    roundto100(s.avgFiveYearCagr),
   );
 });
+// console.log(sectoredGroupArray.length);
+
+function roundto100(num) {
+  return Math.round(num * 100) / 100;
+}
 
 let sumClosePrice = 0;
 let sumMarketCap = 0;
